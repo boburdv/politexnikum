@@ -6,32 +6,17 @@ import { SiTelegram } from "react-icons/si";
 import { GrYoutube } from "react-icons/gr";
 import { supabase } from "../supabase";
 
-const ADMIN_EMAIL = "admin@admin.uz";
-
 export default function Header() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [showHeader, setShowHeader] = useState(true);
 
-  // Supabase auth holatini kuzatish
   useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
-    };
-
-    getUser();
-
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-    });
-
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    const { data: listener } = supabase.auth.onAuthStateChange((_, session) => setUser(session?.user ?? null));
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // Scrollga qarab header ni yashirish/ko‘rsatish
   useEffect(() => {
     let lastScroll = window.scrollY;
     const handleScroll = () => {
@@ -48,6 +33,12 @@ export default function Header() {
     navigate("/");
   };
 
+  const socialLinks = [
+    { icon: <SiTelegram className="w-4 h-4" />, href: "#" },
+    { icon: <FaInstagram className="w-4 h-4" />, href: "#" },
+    { icon: <GrYoutube className="w-4 h-4" />, href: "#" },
+  ];
+
   return (
     <div className={`fixed top-0 left-0 right-0 z-50 bg-base-100 transition-transform duration-300 ${showHeader ? "translate-y-0" : "-translate-y-full"}`}>
       <div className="bg-base-200 text-base-content border-b border-base-300">
@@ -60,22 +51,15 @@ export default function Header() {
               <EnvelopeIcon className="w-4 h-4" /> info@politex.uz
             </a>
           </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 mr-4">
               <ClockIcon className="w-4 h-4" /> 8:00 - 18:00
             </div>
-            <div className="flex items-center gap-2">
-              <a href="#" className="p-1 rounded-lg bg-white hover:bg-primary hover:text-white">
-                <SiTelegram className="w-4 h-4" />
+            {socialLinks.map((s, i) => (
+              <a key={i} href={s.href} className="p-1 rounded-lg bg-white hover:bg-primary hover:text-white">
+                {s.icon}
               </a>
-              <a href="#" className="p-1 rounded-lg bg-white hover:bg-primary hover:text-white">
-                <FaInstagram className="w-4 h-4" />
-              </a>
-              <a href="#" className="p-1 rounded-lg bg-white hover:bg-primary hover:text-white">
-                <GrYoutube className="w-4 h-4" />
-              </a>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -93,11 +77,9 @@ export default function Header() {
             <Link to="/about" className="hover:text-primary">
               Haqida
             </Link>
-
             <Link to="/" className="flex items-center gap-1 hover:text-primary">
               Yarmarka
             </Link>
-
             <Link to="/admin" className="hover:text-primary">
               Admin
             </Link>
@@ -109,17 +91,15 @@ export default function Header() {
             ) : (
               <div className="dropdown dropdown-end">
                 <button tabIndex={0} className="rounded-full overflow-hidden">
-                  <div className="bg-primary text-white w-8 h-8 flex items-center justify-center">{user.user_metadata?.full_name ? user.user_metadata.full_name[0].toUpperCase() : "U"}</div>
+                  <div className="bg-primary text-white w-8 h-8 flex items-center justify-center">{user.user_metadata?.full_name?.[0]?.toUpperCase() ?? "U"}</div>
                 </button>
                 <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box w-52 shadow mt-3 p-2">
                   <li className="font-semibold px-2 py-1">{user.user_metadata?.full_name ?? "Foydalanuvchi"}</li>
-
                   <li>
                     <Link to="/chat" className="font-semibold">
                       Izohlar
                     </Link>
                   </li>
-
                   <li>
                     <button onClick={handleLogout}>Hisobdan chiqish</button>
                   </li>

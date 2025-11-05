@@ -1,24 +1,20 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
-import { supabase } from "../supabase"; // Supabase client
+import { useState, useEffect } from "react";
+import { supabase } from "../supabase";
 
 export default function Home() {
   const [staticCategories, setStaticCategories] = useState([]);
   const [dynamicCategories, setDynamicCategories] = useState([]);
 
   useEffect(() => {
-    const fetchStatic = async () => {
-      const { data, error } = await supabase.from("static").select("*");
-      if (!error) setStaticCategories(data);
-    };
-
-    const fetchDynamic = async () => {
-      const { data, error } = await supabase.from("categories").select("*");
-      if (!error) setDynamicCategories(data);
-    };
-
-    fetchStatic();
-    fetchDynamic();
+    supabase
+      .from("static")
+      .select("*")
+      .then(({ data }) => data && setStaticCategories(data));
+    supabase
+      .from("categories")
+      .select("*")
+      .then(({ data }) => data && setDynamicCategories(data));
   }, []);
 
   return (
@@ -32,7 +28,7 @@ export default function Home() {
             <span className="inline-block bg-primary px-4 py-1.5 rounded-r-full text-sm font-semibold">RISHTON TUMAN</span>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-snug md:max-w-lg">1-son Politeхnikumiga xush kelibsiz</h1>
             <p className="max-w-md md:max-w-lg text-base md:text-lg font-medium text-white/90">
-              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Dolores autem fugit itaque odio, iusto quis odit suscipit reprehenderit voluptas explicabo?
+              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dolores autem fugit itaque odio, iusto quis odit suscipit reprehenderit voluptas explicabo?
             </p>
           </div>
         </div>

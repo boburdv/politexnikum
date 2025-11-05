@@ -12,10 +12,8 @@ export default function Auth() {
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { search } = useLocation();
-  const redirect = new URLSearchParams(search).get("redirect") || "/";
+  const redirect = new URLSearchParams(useLocation().search).get("redirect") || "/";
 
-  // Email/Password kirish yoki ro'yxatdan o'tish
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -26,31 +24,28 @@ export default function Auth() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       } else {
-        const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: displayName } } });
+        const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: displayName } } });
         if (error) throw error;
       }
       navigate(redirect);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
-  // Google bilan kirish
   const handleGoogleSignIn = async () => {
     setError("");
     setGoogleLoading(true);
-
     try {
       const { error } = await supabase.auth.signInWithOAuth({ provider: "google" });
       if (error) throw error;
-      // OAuth redirect keyin Supabase o‘zi qayta yo‘naltiradi
     } catch (err) {
       setError(err.message);
+    } finally {
+      setGoogleLoading(false);
     }
-
-    setGoogleLoading(false);
   };
 
   return (

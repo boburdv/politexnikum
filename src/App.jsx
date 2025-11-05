@@ -12,13 +12,11 @@ import About from "./pages/About";
 
 function AppWrapper() {
   const location = useLocation();
-  const noLayoutRoutes = ["/auth", "/chat", "/admin"];
-  const hideLayout = noLayoutRoutes.some((path) => location.pathname.startsWith(path));
+  const hideLayout = ["/auth", "/chat", "/admin"].some((path) => location.pathname.startsWith(path));
 
   return (
     <div className="flex flex-col min-h-screen">
       {!hideLayout && <Header />}
-
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -31,7 +29,6 @@ function AppWrapper() {
           <Route path="/about" element={<About />} />
         </Routes>
       </main>
-
       {!hideLayout && <Footer />}
     </div>
   );

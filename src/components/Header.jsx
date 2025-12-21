@@ -45,7 +45,7 @@ export default function Header() {
     <div className={`fixed top-0 left-0 right-0 shadow-xs z-50 bg-base-100 transition-transform duration-300 ${showHeader ? "translate-y-0" : "-translate-y-full"}`}>
       {/* ================= TOP INFO ================= */}
       <div className="bg-base-200 border-b border-base-300">
-        <div className="max-w-6xl mx-auto flex justify-between items-center py-2 px-2 text-sm">
+        <div className="max-w-6xl mx-auto flex justify-between items-center py-2 px-4 text-sm">
           {/* Left */}
           <div className="flex gap-5">
             <div className="flex items-center gap-1">
@@ -72,7 +72,7 @@ export default function Header() {
       </div>
 
       {/* ================= NAVBAR ================= */}
-      <div className="navbar bg-base-100 py-4 px-2 max-w-6xl mx-auto">
+      <div className="navbar bg-base-100 py-4 pr-4 max-w-6xl mx-auto">
         {/* MOBILE HAMBURGER */}
         <div className="flex-none md:hidden">
           <div className="dropdown">

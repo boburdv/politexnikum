@@ -39,7 +39,7 @@ export default function Home() {
       {/* STATIC CATEGORIES */}
       <div className="max-w-6xl mx-auto mt-24 mb-10 px-4">
         <h2 className="text-2xl md:text-3xl font-medium text-gray-900 mb-8">Kasb yo'nalishlari</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 lg:gap-10">
           {staticCategories.length === 0
             ? Array.from({ length: 6 }).map((_, idx) => (
                 <div key={idx} className="flex flex-col gap-4 rounded-lg overflow-hidden animate-pulse">
@@ -51,7 +51,7 @@ export default function Home() {
               ))
             : staticCategories.map((cat) => (
                 <Link key={cat.id} to={`/${cat.name}`}>
-                  <div className="card border-base-300 border hover:shadow-sm transition-shadow duration-300 overflow-hidden">
+                  <div className="card border-base-300 border hover:shadow transition-shadow duration-300 overflow-hidden">
                     {/* <figure className="aspect-[3/2] overflow-hidden">
                       <img src={cat.image_url || "/no-image.webp"} alt={cat.name} className="w-full h-full object-cover transition-transform" />
                     </figure> */}
@@ -66,9 +66,9 @@ export default function Home() {
       </div>
 
       {/* DYNAMIC CATEGORIES */}
-      <div className="max-w-6xl mx-auto mt-20 mb-24">
+      <div className="max-w-6xl mx-auto mt-20 mb-24 px-4">
         <h2 className="text-2xl md:text-3xl font-medium text-gray-900 mb-8">Yarmarka</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-10">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-10">
           {dynamicCategories.length === 0
             ? Array.from({ length: 4 }).map((_, idx) => (
                 <div key={idx} className="card shadow animate-pulse overflow-hidden">
@@ -80,7 +80,7 @@ export default function Home() {
               ))
             : dynamicCategories.map((cat) => (
                 <Link key={cat.id} to={`/category/${encodeURIComponent(cat.name)}`}>
-                  <div className="card shadow hover:shadow-lg transition overflow-hidden">
+                  <div className="card border border-base-300 hover:shadow transition overflow-hidden">
                     <figure className="aspect-square bg-gray-100 flex items-center justify-center">
                       <img src={cat.image_url || "/no-image.webp"} alt={cat.name} className="w-full h-full object-cover" />
                     </figure>

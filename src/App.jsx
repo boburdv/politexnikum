@@ -23,7 +23,6 @@ function AppWrapper() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
-
           <Route path="/:categoryName" element={<CategoryPage />} />
           <Route path="/category/:categoryName" element={<AdCategory />} />
           <Route path="/ad/:adId" element={<AdDetail />} />

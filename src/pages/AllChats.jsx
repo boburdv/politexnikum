@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../supabase";
+import { BsThreeDotsVertical } from "react-icons/bs";
+import { PencilIcon, TrashIcon } from "@heroicons/react/16/solid";
 
 export default function ChatPage() {
   const location = useLocation();
@@ -14,6 +16,7 @@ export default function ChatPage() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef(null);
+  const [editingIndex, setEditingIndex] = useState(null); // Qaysi xabar tahrirlanmoqda
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -80,11 +83,24 @@ export default function ChatPage() {
   const handleSend = async () => {
     if (!text.trim() || !selectedChatId) return;
 
-    const newMsg = { sender: currentUserId, text: text.trim(), createdAt: Date.now() };
-    setText("");
-    const updated = [...messages, newMsg];
+    if (editingIndex !== null) {
+      // Tahrirlash rejimi: eski xabarni yangilash
+      const updated = [...messages];
+      updated[editingIndex] = {
+        ...updated[editingIndex],
+        text: text.trim(),
+        editedAt: Date.now(), // optional, qachon tahrir qilinganini saqlash
+      };
+      await supabase.from("chats").update({ messages: updated }).eq("id", selectedChatId);
+      setEditingIndex(null); // tahrirlash rejimidan chiqish
+    } else {
+      // Yangi xabar qo'shish
+      const newMsg = { sender: currentUserId, text: text.trim(), createdAt: Date.now() };
+      const updated = [...messages, newMsg];
+      await supabase.from("chats").update({ messages: updated }).eq("id", selectedChatId);
+    }
 
-    await supabase.from("chats").update({ messages: updated }).eq("id", selectedChatId);
+    setText("");
   };
 
   const deleteMessage = async (index) => {
@@ -96,13 +112,16 @@ export default function ChatPage() {
   if (!user)
     return (
       <p className="text-center mt-20">
-        Avval ro'yxatdan o'ting. <a href="/auth">Login</a>
+        Avval ro'yxatdan o'ting.{" "}
+        <a href="/auth" className="text-blue-700">
+          Login
+        </a>
       </p>
     );
 
   return (
-    <div className="bg-base-200 flex flex-col p-4 h-screen">
-      <div className="card mx-auto bg-white max-w-xl w-full shadow-sm h-full flex flex-col">
+    <div className="flex flex-col h-screen">
+      <div className="mx-auto max-w-xl w-full lg:max-h-full max-h-11/12 flex flex-col">
         <div className="flex flex-col flex-1 overflow-hidden">
           <div className="p-4 shadow flex gap-2 justify-between items-center">
             <div className="flex items-center gap-3 flex-1">
@@ -114,7 +133,7 @@ export default function ChatPage() {
                   <span className="font-semibold text-lg">{chats.find((c) => c.id === selectedChatId)?.id.replace("category-", "")}</span>
                 </>
               ) : (
-                <span className="font-semibold text-lg">Fikrlar bo‘yicha kategoriya</span>
+                <span className="font-semibold text-lg">Kategoriya</span>
               )}
             </div>
 
@@ -125,9 +144,9 @@ export default function ChatPage() {
                 setSelectedChatId(chatId);
                 navigate(chatId ? `/chat?category=${encodeURIComponent(chatId.replace("category-", ""))}` : "/chat");
               }}
-              className="select flex-1"
+              className="select flex-1 "
             >
-              <option value="">Fikrlar bo‘yicha kategoriya</option>
+              <option disabled>Kategoriya</option>
               {chats.map((chat) => (
                 <option key={chat.id} value={chat.id}>
                   {chat.id.replace("category-", "")}
@@ -144,35 +163,55 @@ export default function ChatPage() {
 
                 return (
                   <div key={i} className="chat chat-start relative">
-                    <div className="absolute right-0 top-0">
-                      <div className="dropdown dropdown-left">
-                        <div tabIndex={0} role="button" className="btn btn-xs btn-ghost">
-                          •••
+                    {/* Dropdown faqat xabar egasi uchun */}
+                    {isMe && (
+                      <div className="absolute right-0 top-4">
+                        <div className="dropdown dropdown-left">
+                          <div tabIndex={0} role="button" className="btn btn-circle btn-sm text-gray-600 btn-ghost">
+                            <BsThreeDotsVertical size={20} />
+                          </div>
+                          <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-44">
+                            <li>
+                              <button
+                                onClick={() => {
+                                  setText(msg.text);
+                                  setEditingIndex(i);
+                                }}
+                              >
+                                <PencilIcon className="w-4 h-4" />
+                                Tahrirlash
+                              </button>
+                            </li>
+                            <li>
+                              <button className="text-red-600" onClick={() => deleteMessage(i)}>
+                                <TrashIcon className="w-4 h-4" />
+                                O'chirish
+                              </button>
+                            </li>
+                          </ul>
                         </div>
-                        <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-28">
-                          <li>
-                            <button className="text-red-500" onClick={() => deleteMessage(i)}>
-                              O‘chirish
-                            </button>
-                          </li>
-                        </ul>
                       </div>
-                    </div>
+                    )}
 
+                    {/* Avatar */}
                     <div className="chat-image avatar" title={msg.sender}>
                       <div className="w-10 rounded-full">
                         <img alt="avatar" src={`https://ui-avatars.com/api/?name=${msg.sender}&background=random`} />
                       </div>
                     </div>
 
+                    {/* Vaqt */}
                     <div className="chat-header flex items-center gap-2">
                       <time className="text-xs opacity-50">{time}</time>
+                      {msg.editedAt && <span className="text-xs opacity-50 ml-1">(tahrirlandi)</span>}
                     </div>
 
+                    {/* Xabar */}
                     <div className={`chat-bubble ${isMe ? "chat-bubble-primary" : ""}`}>{msg.text}</div>
                   </div>
                 );
               })}
+
             <div ref={scrollRef}></div>
           </div>
         </div>
@@ -184,10 +223,16 @@ export default function ChatPage() {
               onChange={(e) => setText(e.target.value)}
               placeholder="Izoh qoldiring..."
               className="input input-bordered flex-1"
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
             />
-            <button onClick={handleSend} className="btn btn-primary">
-              Yuborish
+
+            <button onClick={handleSend} className="btn-primary btn">
+              {editingIndex !== null ? "Yangilash" : "Yuborish"}
             </button>
           </div>
         )}

@@ -1,16 +1,17 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { PhoneIcon, EnvelopeIcon, ClockIcon, UserIcon, Bars3Icon, XMarkIcon } from "@heroicons/react/24/solid";
-import { FaInstagram } from "react-icons/fa";
+import { FaInstagram, FaSignOutAlt } from "react-icons/fa";
 import { SiTelegram } from "react-icons/si";
 import { GrYoutube } from "react-icons/gr";
 import { supabase } from "../supabase";
+import { FaUser, FaUserShield } from "react-icons/fa6";
 
 export default function Header() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [showHeader, setShowHeader] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false); // <-- yangi
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toast, setToast] = useState({ message: "", type: "", visible: false });
   const lastScrollY = useRef(0);
 
@@ -44,12 +45,11 @@ export default function Header() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     showToast("Hisobdan chiqildi!", "success");
-    navigate("/"); // toast ko‘rinib tursin
+    navigate("/");
   };
 
   return (
     <div className="relative">
-      {/* Toast o'rtada tepada */}
       {toast.message && (
         <div className={`fixed top-4 left-1/2 -translate-x-1/2 transition-opacity duration-500 z-50 ${toast.visible ? "opacity-100" : "opacity-0"}`}>
           <div className={`alert ${toast.type === "success" ? "alert-success" : "alert-error"}`}>
@@ -63,7 +63,7 @@ export default function Header() {
           <div className="max-w-6xl mx-auto flex justify-between items-center py-1.5 px-4 text-sm">
             <div className="flex gap-5">
               <div className="flex items-center gap-1">
-                <PhoneIcon className="w-4 h-4" /> (90) 94 441 1407
+                <PhoneIcon className="w-4 h-4" /> (94) 441 14 07
               </div>
               <div className="hidden md:flex items-center gap-1">
                 <EnvelopeIcon className="w-4 h-4" /> info@politex.uz
@@ -86,18 +86,15 @@ export default function Header() {
 
         <div className="navbar bg-base-100 px-4 max-w-6xl mx-auto">
           <div className="flex-1 justify-start">
-            {/* Mobile menu icon */}
             <button className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
               {mobileMenuOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6 mt-1.5" />}
             </button>
 
-            {/* Desktop logo */}
             <Link to="/" className="hidden md:block text-[25px] md:ml-2 font-semibold text-gray-700">
               TEXNIKUM
             </Link>
           </div>
 
-          {/* Desktop nav */}
           <nav className="hidden md:flex gap-6 text-sm font-medium">
             <Link to="/" className="hover:text-primary">
               Bosh sahifa
@@ -122,13 +119,22 @@ export default function Header() {
                 </button>
                 <ul className="dropdown-content menu bg-base-100 rounded-box w-52 shadow mt-3 p-2">
                   <li className="disabled">
-                    <span className="line-clamp-1">{user.user_metadata?.full_name}</span>
+                    <Link className="flex items-center gap-2">
+                      <FaUser />
+                      <span className="line-clamp-1">{user.user_metadata?.full_name}</span>
+                    </Link>
                   </li>
                   <li>
-                    <Link to="/admin">Admin panel</Link>
+                    <Link to="/admin" className="flex items-center gap-2">
+                      <FaUserShield />
+                      <span>Admin panel</span>
+                    </Link>
                   </li>
-                  <li>
-                    <button onClick={handleLogout}>Hisobdan chiqish</button>
+                  <li className="text-error">
+                    <button onClick={handleLogout} className="flex items-center gap-2 w-full">
+                      <FaSignOutAlt />
+                      <span>Hisobdan chiqish</span>
+                    </button>
                   </li>
                 </ul>
               </div>
@@ -138,7 +144,6 @@ export default function Header() {
 
         {mobileMenuOpen && (
           <div className="md:hidden fixed top-0 left-0 w-full h-screen bg-base-100 shadow-md z-40 flex flex-col">
-            {/* Logo */}
             <div className="flex items-center justify-between px-4 py-4 border-b border-base-300">
               <Link to="/" className="text-[25px] font-semibold text-gray-700" onClick={() => setMobileMenuOpen(false)}>
                 TEXNIKUM
@@ -148,7 +153,6 @@ export default function Header() {
               </button>
             </div>
 
-            {/* Menu Links */}
             <nav className="flex flex-col p-4 gap-3 text-sm font-medium">
               <Link to="/" className="hover:text-primary" onClick={() => setMobileMenuOpen(false)}>
                 Bosh sahifa

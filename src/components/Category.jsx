@@ -6,29 +6,26 @@ export default function CategoryPage() {
   const { categoryName } = useParams();
   const [category, setCategory] = useState(null);
   const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true); // Butun sahifa uchun loading
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [showFullDescription, setShowFullDescription] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-
       try {
-        const { data: categoryData, error } = await supabase.from("static").select("id, name, description, image_url, students").ilike("name", `%${categoryName}%`).maybeSingle();
-
+        const { data: categoryData } = await supabase.from("static").select("id, name, description, image_url, students").ilike("name", `%${categoryName}%`).maybeSingle();
         if (!categoryData) {
           setCategory(null);
           setStudents([]);
           return;
         }
-
         setCategory(categoryData);
         setStudents(categoryData.students || []);
       } finally {
         setLoading(false);
       }
     }
-
     fetchData();
   }, [categoryName]);
 
@@ -54,15 +51,19 @@ export default function CategoryPage() {
   return (
     <div className="max-w-6xl mx-auto p-4 lg:my-4">
       <div className="md:flex gap-8 w-full">
-        <div className="md:w-1/2 w-full aspect-[3/2] overflow-hidden">
-          <img src={category.image_url || "/no-image.webp"} alt={category.name} className="w-full h-full object-cover rounded-md" />
+        <div className="md:w-1/2 w-full aspect-[3/2] overflow-hidden relative rounded-md bg-gray-200">
+          {!imageLoaded && <div className="absolute inset-0 animate-pulse bg-gray-300" />}
+          <img
+            src={category.image_url || "/no-image.webp"}
+            alt={category.name}
+            className={`w-full h-full object-cover rounded-md transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+            onLoad={() => setImageLoaded(true)}
+          />
         </div>
 
         <div className="md:w-1/2 w-full mt-4 md:mt-0">
           <h1 className="text-3xl font-bold mb-4">{category.name}</h1>
-
           <div className={`text-gray-700 whitespace-pre-line overflow-hidden ${showFullDescription ? "" : "line-clamp-5"}`}>{category.description}</div>
-
           {category.description?.length > 100 && (
             <button className="mt-2 text-blue-600 text-sm cursor-pointer hover:underline" onClick={() => setShowFullDescription(!showFullDescription)}>
               {showFullDescription ? "Kamroq o'qish" : "Ko'proq o'qish"}
@@ -74,7 +75,6 @@ export default function CategoryPage() {
       {students.length > 0 && (
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-3">O‘quvchilar ro‘yxati</h2>
-
           <div className="max-h-[400px] overflow-y-auto overflow-x-auto border border-gray-200 rounded-md">
             <table className="min-w-full text-sm">
               <thead className="sticky top-0 bg-base-200 z-10">

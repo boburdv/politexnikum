@@ -43,10 +43,10 @@ export default function Footer() {
               Telegram chat
             </a>
             <a href="tel:+998901234567" className="hover:text-primary">
-              (90) 94 441 1407
+              (94) 441 14 07
             </a>
             <a href="mailto:rishton@tech.uz" className="hover:text-primary">
-              rishton@tech.uz
+              info@politex.uz
             </a>
           </nav>
 

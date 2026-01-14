@@ -128,7 +128,7 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="mx-auto max-w-xl w-full lg:max-h-full max-h-11/12 flex flex-col">
+      <div className="mx-auto max-w-xl w-full h-full lg:max-h-full max-h-full flex flex-col">
         <div className="flex flex-col flex-1 overflow-hidden">
           <div className="p-4 shadow flex gap-2 justify-between items-center">
             <div className="flex items-center gap-3 flex-1">

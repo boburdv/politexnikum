@@ -19,6 +19,7 @@ export default function AdminPanel() {
   const [category, setCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
   const [price, setPrice] = useState("");
+  const [telegram, setTelegram] = useState("");
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,7 +39,6 @@ export default function AdminPanel() {
     const fetch = async () => {
       const { data: cats } = await supabase.from("dynamic").select("*");
       if (cats) setCategories(cats);
-
       const { data: adsData } = await supabase.from("ads").select("*").order("created_at", { ascending: false });
       if (adsData) setAds(adsData.filter((ad) => ad?.title));
     };
@@ -83,10 +83,16 @@ export default function AdminPanel() {
       image_url = supabase.storage.from("ads").getPublicUrl(path).data.publicUrl;
     }
 
+    let telegramValue = telegram.trim();
+    if (telegramValue) {
+      if (/^\d+$/.test(telegramValue)) telegramValue = `https://t.me/${telegramValue}`;
+      else if (!telegramValue.startsWith("https://t.me/")) telegramValue = `https://t.me/${telegramValue.replace("@", "")}`;
+    }
+
     if (editingId) {
       const { data: updated } = await supabase
         .from("ads")
-        .update({ title, description, price, category, sub_category: subCategory, ...(image_url && { image_url }) })
+        .update({ title, description, price, category, sub_category: subCategory, telegram: telegramValue, ...(image_url && { image_url }) })
         .eq("id", editingId)
         .select();
       if (updated?.[0]) setAds((prev) => prev.map((ad) => (ad.id === editingId ? updated[0] : ad)));
@@ -95,7 +101,7 @@ export default function AdminPanel() {
     } else {
       const { data: newAds } = await supabase
         .from("ads")
-        .insert([{ title, description, price, category, sub_category: subCategory, image_url, created_at: new Date() }])
+        .insert([{ title, description, price, category, sub_category: subCategory, telegram: telegramValue, image_url, created_at: new Date() }])
         .select();
       if (newAds?.[0]) setAds((prev) => [newAds[0], ...prev]);
       showToast("E’lon muvaffaqiyatli qo‘shildi!", "success");
@@ -105,6 +111,7 @@ export default function AdminPanel() {
     setTitle("");
     setDescription("");
     setPrice("");
+    setTelegram("");
     setCategory("");
     setSubCategory("");
     setImage(null);
@@ -122,6 +129,7 @@ export default function AdminPanel() {
     setTitle(ad.title || "");
     setDescription(ad.description || "");
     setPrice(ad.price || "");
+    setTelegram(ad.telegram || "");
     setCategory(ad.category || "");
     setSubCategory(ad.sub_category || "");
   };
@@ -134,7 +142,6 @@ export default function AdminPanel() {
         <span className="loading loading-ring loading-xl"></span>
       </div>
     );
-
   if (!user) return null;
 
   return (
@@ -145,7 +152,7 @@ export default function AdminPanel() {
             E’lonlar
           </button>
           <button className={`join-item btn ${activeTab === "students" ? "btn-primary" : "btn-active"}`} onClick={() => setActiveTab("students")}>
-            O‘quvchilar
+            Statistika
           </button>
         </div>
 
@@ -154,10 +161,6 @@ export default function AdminPanel() {
             <div className="flex-1 max-w-xl bg-base-100 shadow card p-6 flex flex-col">
               <h2 className="card-title mb-4 text-center">{editingId ? "E'lonni tahrirlash" : "E'lon qo'shish"}</h2>
               <form className="flex flex-col gap-4" onSubmit={handleSubmitAd}>
-                <input type="text" placeholder="E’lon nomi" className="input w-full" value={title} onChange={(e) => setTitle(e.target.value)} />
-                <textarea placeholder="Tafsifi" className="textarea w-full" value={description} onChange={(e) => setDescription(e.target.value)} />
-                <input type="text" placeholder="Narxi" className="input w-full" value={price} onChange={(e) => setPrice(e.target.value)} />
-                <input type="file" className="file-input w-full" onChange={(e) => setImage(e.target.files[0])} />
                 <select
                   className="select w-full"
                   value={category}
@@ -184,6 +187,13 @@ export default function AdminPanel() {
                         </option>
                       ))}
                 </select>
+                <input type="text" placeholder="E’lon nomi" className="input w-full" value={title} onChange={(e) => setTitle(e.target.value)} />
+                <textarea placeholder="E'lon bo'yicha batafsil" className="textarea w-full" value={description} onChange={(e) => setDescription(e.target.value)} />
+                <input type="file" className="file-input w-full" onChange={(e) => setImage(e.target.files[0])} />
+                <div className="flex gap-2">
+                  <input type="text" placeholder="Telegram @user/+998" className="input flex-1" value={telegram} onChange={(e) => setTelegram(e.target.value)} />
+                  <input type="text" placeholder="Narx/100 000" className="input flex-1" value={price} onChange={(e) => setPrice(e.target.value)} />
+                </div>
                 <button type="submit" className="btn btn-primary w-full flex items-center justify-center gap-2">
                   {loading && <span className="loading loading-spinner"></span>}
                   {editingId ? "Yangilash" : "Qo'shish"}

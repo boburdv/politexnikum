@@ -67,7 +67,7 @@ export default function AdDetail() {
             {ad.price && (
               <div className="bg-base-200 rounded-lg p-3">
                 <p className="text-sm opacity-70">Narx</p>
-                <p className="text-2xl font-bold text-primary">{ad.price} so‘m</p>
+                <p className="text-2xl font-bold text-primary">{ad.price} so'm</p>
               </div>
             )}
 
@@ -104,7 +104,7 @@ export default function AdDetail() {
 
               <a href={telegramLink} target="_blank" rel="noopener noreferrer" className="btn btn-ghost gap-2">
                 <LiaTelegramPlane className="w-5 h-5" />
-                Bog‘lanish
+                Bog'lanish
               </a>
 
               <button onClick={() => navigate(`/chat?category=${encodeURIComponent(ad.category)}`)} className="btn btn-ghost gap-2">

@@ -13,7 +13,9 @@ export default function StudentsAdmin() {
   const [studentLoading, setStudentLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredStudents, setFilteredStudents] = useState([]);
+  const [studentToDelete, setStudentToDelete] = useState(null);
   const searchRef = useRef(null);
+  const deleteModalRef = useRef(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -67,14 +69,22 @@ export default function StudentsAdmin() {
     setStudentLoading(false);
   };
 
-  const handleDeleteStudent = async (categoryId, index) => {
-    const cat = categories.find((c) => c.id === categoryId);
+  const confirmDeleteStudent = (student) => {
+    setStudentToDelete(student);
+    deleteModalRef.current.showModal();
+  };
+
+  const handleDeleteStudent = async () => {
+    if (!studentToDelete) return;
+    const cat = categories.find((c) => c.id === studentToDelete.categoryId);
     if (!cat) return;
     const updatedStudents = [...(cat.students || [])];
-    updatedStudents.splice(index, 1);
-    const { error } = await supabase.from("static").update({ students: updatedStudents }).eq("id", categoryId);
-    if (!error) setCategories((prev) => prev.map((c) => (c.id === categoryId ? { ...c, students: updatedStudents } : c)));
+    updatedStudents.splice(studentToDelete.index, 1);
+    const { error } = await supabase.from("static").update({ students: updatedStudents }).eq("id", studentToDelete.categoryId);
+    if (!error) setCategories((prev) => prev.map((c) => (c.id === studentToDelete.categoryId ? { ...c, students: updatedStudents } : c)));
     toast.success("Ro'yxat muvaffaqiyatli o‘chirildi!");
+    setStudentToDelete(null);
+    deleteModalRef.current.close();
   };
 
   const handleEditStudent = (categoryId, index) => {
@@ -132,7 +142,7 @@ export default function StudentsAdmin() {
                   <button className="btn btn-circle btn-ghost" onClick={() => handleEditStudent(student.categoryId, student.index)}>
                     <PencilIcon className="w-5 h-5" />
                   </button>
-                  <button className="btn btn-circle btn-ghost" onClick={() => handleDeleteStudent(student.categoryId, student.index)}>
+                  <button className="btn btn-circle btn-ghost" onClick={() => confirmDeleteStudent(student)}>
                     <TrashIcon className="w-5 h-5 text-red-600" />
                   </button>
                 </div>
@@ -143,6 +153,21 @@ export default function StudentsAdmin() {
           )}
         </div>
       </div>
+
+      <dialog ref={deleteModalRef} className="modal">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">Rostdan o‘chirmoqchimisiz?</h3>
+          <p className="py-4">Bu amalni qaytarib bo‘lmaydi.</p>
+          <div className="modal-action">
+            <button className="btn" onClick={() => deleteModalRef.current.close()}>
+              Bekor qilish
+            </button>
+            <button className="btn btn-error" onClick={handleDeleteStudent}>
+              <TrashIcon className="w-5 h-5" /> O‘chirish
+            </button>
+          </div>
+        </div>
+      </dialog>
     </div>
   );
 }

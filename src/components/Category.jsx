@@ -53,10 +53,10 @@ export default function CategoryPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 lg:mt-24">
+    <div className="container mx-auto p-4 lg:mt-24">
       <div className="md:flex gap-8 w-full">
         <div className="md:w-1/2 w-full aspect-[3/2] overflow-hidden relative rounded-md bg-gray-200">
-          {!imageLoaded && <div className="absolute inset-0 animate-pulse bg-gray-300" />}
+          {!imageLoaded && <div className="absolute inset-0 skeleton" />}
           <img
             src={category.image_url || "/no-image.webp"}
             alt={category.name}
@@ -82,7 +82,7 @@ export default function CategoryPage() {
           <div className="max-h-[400px] overflow-y-auto overflow-x-auto border border-gray-200 rounded-md">
             <table className="min-w-full text-sm">
               <thead className="sticky top-0 bg-base-200 z-10">
-                <tr className="text-left">
+                <tr className="text-left border-b border-base-300">
                   <th className="px-4 py-3 font-semibold">#</th>
                   <th className="px-4 py-3 font-semibold">Ism</th>
                   <th className="px-4 py-3 font-semibold">Familiya</th>

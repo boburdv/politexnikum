@@ -72,7 +72,7 @@ export default function Footer() {
         </div>
       </footer>
 
-      <div className="border-t py-4 text-center text-gray-500 text-sm border-base-300">© {year} 1-techrishton.uz</div>
+      <div className="border-t py-4 text-center text-gray-500 text-sm border-base-300">© {year} rishton1-texnikum.uz</div>
     </div>
   );
 }

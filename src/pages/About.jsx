@@ -12,7 +12,7 @@ const contacts = ["Telegram: @texnikum1", "Telefon: (94) 441 14 07", "Email: inf
 
 const About = memo(() => {
   return (
-    <div className="max-w-6xl mx-auto lg:mt-36 mb-24 px-4">
+    <div className="container mx-auto lg:mt-36 mb-24 px-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:gap-8 gap-4">
         <div className="w-full h-72 md:h-auto overflow-hidden">
           <img src="/home-img.jpg" alt="About Image" className="w-full h-full object-cover rounded-md" loading="lazy" />

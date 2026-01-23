@@ -11,6 +11,11 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+body {
+  background: linear-gradient(135deg, #f2f2e69d, #ffffff);
+  min-height: 100vh;
+  margin: 0;
+}
 
 :root {
   --primary: #1d4ed8;
@@ -23,7 +28,6 @@
 
   --text-main: #0f172a;
   --text-secondary: #475569;
-  --text-muted: #94a3b8;
 
   --success: #22c55e;
   --warning: #f59e0b;

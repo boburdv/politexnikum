@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../supabase";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { fetchNews } from "../api";
 
 export default function News() {
   const [news, setNews] = useState([]);
@@ -9,12 +9,13 @@ export default function News() {
   const [fade, setFade] = useState(true);
 
   useEffect(() => {
-    const fetchNews = async () => {
-      const { data } = await supabase.from("news").select("*").order("created_at", { ascending: false });
+    const run = async () => {
+      setLoading(true);
+      const { data } = await fetchNews();
       if (data) setNews(data);
       setLoading(false);
     };
-    fetchNews();
+    run();
   }, []);
 
   useEffect(() => {

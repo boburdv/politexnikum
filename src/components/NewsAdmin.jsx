@@ -1,7 +1,11 @@
-import { useEffect, useRef, useState } from "react";
-import { supabase } from "../supabase";
-import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { TrashIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
+
+import { addNews, deleteNews, fetchNews } from "../api";
+import { supabase } from "../supabase";
+
+const BUCKET = "news-image";
 
 export default function NewsAdmin() {
   const searchRef = useRef(null);
@@ -11,23 +15,22 @@ export default function NewsAdmin() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [editingId, setEditingId] = useState(null);
   const [description, setDescription] = useState("");
   const [image, setImage] = useState(null);
   const [saving, setSaving] = useState(false);
 
   const [newsToDelete, setNewsToDelete] = useState(null);
 
-  useEffect(() => {
-    fetchNews();
-  }, []);
-
-  const fetchNews = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase.from("news").select("*").order("created_at", { ascending: false });
+    const { data } = await fetchNews();
     if (data) setNews(data);
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -40,92 +43,77 @@ export default function NewsAdmin() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
+  const uploadIfNeeded = useCallback(async () => {
+    if (!image) return null;
+
+    const ext = image.name.split(".").pop() || "jpg";
+    const fileName = `${Date.now()}-${Math.random().toString(16).slice(2)}.${ext}`;
+
+    const { error } = await supabase.storage.from(BUCKET).upload(fileName, image, { upsert: true });
+
+    if (error) {
+      toast.error("Rasm yuklanmadi");
+      return null;
+    }
+
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName);
+    return data?.publicUrl || null;
+  }, [image]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!description.trim()) return toast.error("Matnni kiriting");
+
     setSaving(true);
 
-    if (!description) {
-      toast.error("Matnni kiriting");
-      setSaving(false);
-      return;
-    }
-
-    let image_url = null;
-    if (image) {
-      const ext = image.name.split(".").pop();
-      const fileName = `${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("news-image").upload(fileName, image, { upsert: true });
-      if (error) {
-        toast.error("Rasm yuklanmadi");
-        setSaving(false);
-        return;
-      }
-      image_url = supabase.storage.from("news-image").getPublicUrl(fileName).data.publicUrl;
-    }
-
-    if (editingId) {
-      const { data } = await supabase
-        .from("news")
-        .update({
-          description,
-          ...(image_url && { image_url }),
-        })
-        .eq("id", editingId)
-        .select();
-
-      if (data?.[0]) {
-        setNews((prev) => prev.map((n) => (n.id === editingId ? data[0] : n)));
-      }
-      setEditingId(null);
-      toast.success("Yangilik yangilandi");
-    } else {
-      const { data } = await supabase.from("news").insert([{ description, image_url }]).select();
-
+    try {
+      const image_url = await uploadIfNeeded();
+      const { data } = await addNews({ description: description.trim(), image_url });
       if (data?.[0]) setNews((prev) => [data[0], ...prev]);
+
       toast.success("Yangilik qo‘shildi");
+      setDescription("");
+      setImage(null);
+    } finally {
+      setSaving(false);
     }
-
-    setDescription("");
-    setImage(null);
-    setSaving(false);
-  };
-
-  const handleEdit = (item) => {
-    setEditingId(item.id);
-    setDescription(item.description);
   };
 
   const confirmDelete = (item) => {
     setNewsToDelete(item);
-    deleteModalRef.current.showModal();
+    deleteModalRef.current?.showModal();
   };
 
   const handleDelete = async () => {
     if (!newsToDelete) return;
 
-    await supabase.from("news").delete().eq("id", newsToDelete.id);
+    await deleteNews(newsToDelete.id);
     setNews((prev) => prev.filter((n) => n.id !== newsToDelete.id));
 
     setNewsToDelete(null);
-    deleteModalRef.current.close();
+    deleteModalRef.current?.close();
     toast.error("Yangilik o‘chirildi");
   };
 
-  const filteredNews = news.filter((n) => n.description.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredNews = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return news;
+    return news.filter((n) => (n.description || "").toLowerCase().includes(q));
+  }, [news, searchQuery]);
 
   return (
     <div className="flex flex-col sm:flex-row gap-6">
       <div className="flex-1 max-w-xl bg-base-100 shadow card p-6">
-        <h2 className="card-title mb-4 text-center">{editingId ? "Yangilikni tahrirlash" : "Yangilik qo‘shish"}</h2>
+        <h2 className="card-title mb-4 text-center">Yangilik qo‘shish</h2>
 
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <textarea placeholder="Yangilik matni, maksimal 3 qator" className="textarea w-full min-h-[120px]" value={description} onChange={(e) => setDescription(e.target.value)} />
 
-          <input type="file" className="file-input w-full" onChange={(e) => setImage(e.target.files[0])} />
+          <input type="file" className="file-input w-full" onChange={(e) => setImage(e.target.files?.[0] || null)} />
 
-          <button className="btn btn-primary w-full">
+          <button className="btn btn-primary w-full" disabled={saving}>
             {saving && <span className="loading loading-spinner"></span>}
-            {editingId ? "Yangilash" : "Qo‘shish"}
+            Qo‘shish
           </button>
         </form>
       </div>
@@ -149,14 +137,9 @@ export default function NewsAdmin() {
                 <div key={item.id} className="bg-base-100 shadow transition-shadow hover:shadow-md rounded-lg p-4 flex justify-between items-center">
                   <p className="text-sm text-gray-600 line-clamp-2 pr-2">{item.description}</p>
 
-                  <div className="flex gap-2">
-                    <button className="btn btn-circle btn-ghost" onClick={() => handleEdit(item)}>
-                      <PencilIcon className="w-5 h-5" />
-                    </button>
-                    <button className="btn btn-circle btn-ghost" onClick={() => confirmDelete(item)}>
-                      <TrashIcon className="w-5 h-5 text-red-600" />
-                    </button>
-                  </div>
+                  <button className="btn btn-circle btn-ghost" onClick={() => confirmDelete(item)}>
+                    <TrashIcon className="w-5 h-5 text-red-600" />
+                  </button>
                 </div>
               ))}
         </div>
@@ -167,7 +150,7 @@ export default function NewsAdmin() {
           <h3 className="font-bold text-lg">Rostdan o‘chirmoqchimisiz?</h3>
           <p className="py-4">Bu amalni qaytarib bo‘lmaydi.</p>
           <div className="modal-action">
-            <button className="btn" onClick={() => deleteModalRef.current.close()}>
+            <button className="btn" onClick={() => deleteModalRef.current?.close()}>
               Bekor qilish
             </button>
             <button className="btn btn-error" onClick={handleDelete}>

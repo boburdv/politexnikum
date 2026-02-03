@@ -48,7 +48,7 @@ export default function Footer() {
 
           <nav className="flex flex-col gap-1 items-center sm:items-start">
             <h6 className="text-text-secondary font-semibold mb-2 text-base">Bog'lanish</h6>
-            <a href="https://t.me/+99890944411407" className="hover:text-primary">
+            <a href="https://t.me/+998944411407" className="hover:text-primary">
               Telegram chat
             </a>
             <a href="tel:+998901234567" className="hover:text-primary">
@@ -72,7 +72,7 @@ export default function Footer() {
         </div>
       </footer>
 
-      <div className="border-t py-4 text-center text-gray-500 text-sm border-base-300">© {year} 1-texnikum.uz</div>
+      <div className="border-t py-4 text-center text-gray-500 text-sm border-base-300">© {year} 1-texnikum</div>
     </div>
   );
 }

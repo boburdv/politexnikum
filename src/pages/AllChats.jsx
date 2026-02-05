@@ -1,13 +1,12 @@
-import { useEffect, useState, useRef, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "../supabase";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { PencilIcon, TrashIcon } from "@heroicons/react/16/solid";
 
 export default function ChatPage() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const categoryFromURL = new URLSearchParams(location.search).get("category");
+  const categoryFromURL = useMemo(() => new URLSearchParams(location.search).get("category"), [location.search]);
 
   const [user, setUser] = useState(null);
   const [chats, setChats] = useState([]);
@@ -19,17 +18,24 @@ export default function ChatPage() {
   const [editingIndex, setEditingIndex] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     supabase.auth.getUser().then(({ data }) => {
+      if (cancelled) return;
       setUser(data.user);
       setLoading(false);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
+      if (cancelled) return;
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   const currentUserId = user?.email;
@@ -40,22 +46,36 @@ export default function ChatPage() {
 
     if (categoryFromURL) {
       const chatId = `category-${categoryFromURL}`;
+
       if (!all.find((c) => c.id === chatId)) {
         const { data } = await supabase
           .from("chats")
           .insert([{ id: chatId, messages: [] }])
           .select()
           .single();
-        all.push(data);
+
+        if (data) all.push(data);
       }
+
       setSelectedChatId(chatId);
     }
+
     setChats(all);
   }, [categoryFromURL]);
 
   useEffect(() => {
     fetchChats();
   }, [fetchChats]);
+
+  const selectedChat = useMemo(() => {
+    if (!selectedChatId) return null;
+    return chats.find((c) => c.id === selectedChatId) || null;
+  }, [chats, selectedChatId]);
+
+  const selectedCategoryLabel = useMemo(() => {
+    if (!selectedChat) return "";
+    return selectedChat.id.replace("category-", "");
+  }, [selectedChat]);
 
   useEffect(() => {
     if (!selectedChatId) return;
@@ -116,6 +136,7 @@ export default function ChatPage() {
         <span className="loading loading-ring loading-xl"></span>
       </div>
     );
+
   if (!user)
     return (
       <div className="flex justify-center items-center h-screen bg-gray-50">
@@ -137,31 +158,14 @@ export default function ChatPage() {
               {selectedChatId ? (
                 <>
                   <div className="w-10 h-10 rounded-full overflow-hidden">
-                    <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(chats.find((c) => c.id === selectedChatId)?.id.replace("category-", ""))}&background=random`} alt="avatar" />
+                    <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(selectedCategoryLabel)}&background=random`} alt="avatar" />
                   </div>
-                  <span className="font-semibold text-lg">{chats.find((c) => c.id === selectedChatId)?.id.replace("category-", "")}</span>
+                  <span className="font-semibold text-lg">{selectedCategoryLabel}</span>
                 </>
               ) : (
                 <span className="font-semibold text-lg">Kategoriya</span>
               )}
             </div>
-
-            <select
-              value={selectedChatId}
-              onChange={(e) => {
-                const chatId = e.target.value;
-                setSelectedChatId(chatId);
-                navigate(chatId ? `/chat?category=${encodeURIComponent(chatId.replace("category-", ""))}` : "/chat");
-              }}
-              className="select flex-1"
-            >
-              <option disabled>Kategoriya</option>
-              {chats.map((chat) => (
-                <option key={chat.id} value={chat.id}>
-                  {chat.id.replace("category-", "")}
-                </option>
-              ))}
-            </select>
           </div>
 
           <div className="flex-1 overflow-y-auto flex flex-col gap-2 p-4">
@@ -214,6 +218,7 @@ export default function ChatPage() {
                   </div>
                 );
               })}
+
             <div ref={scrollRef}></div>
           </div>
         </div>

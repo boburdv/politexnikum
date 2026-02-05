@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { supabase } from "../supabase";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
+
+import { authLogin, authSignup, authGoogle } from "../api";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -23,34 +24,14 @@ export default function Auth() {
     }
 
     setLoading(true);
-
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) {
-          toast.error("Email yoki parol noto‘g‘ri");
-          return;
-        }
-
+        const { error } = await authLogin(email, password);
+        if (error) return toast.error("Email yoki parol noto‘g‘ri");
         toast.success("Hisobga kirish muvaffaqiyatli");
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { full_name: displayName },
-          },
-        });
-
-        if (error) {
-          toast.error("Ro‘yxatdan o‘tishda xatolik");
-          return;
-        }
-
+        const { error } = await authSignup(email, password, displayName);
+        if (error) return toast.error("Ro‘yxatdan o‘tishda xatolik");
         toast.success("Ro‘yxatdan o‘tish muvaffaqiyatli");
       }
 
@@ -63,7 +44,7 @@ export default function Auth() {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      await supabase.auth.signInWithOAuth({ provider: "google" });
+      await authGoogle();
     } finally {
       setGoogleLoading(false);
     }
